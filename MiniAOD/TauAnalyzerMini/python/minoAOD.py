@@ -19,7 +19,8 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-    'root://xrootd.unl.edu//store/mc/Spring14miniaod/DYJetsToLL_M-50_13TeV-madgraph-pythia8-tauola_v2/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/00245653-EC23-E411-B9BF-02163E006C73.root'
+#    'root://xrootd.unl.edu//store/mc/Spring14miniaod/DYJetsToLL_M-50_13TeV-madgraph-pythia8-tauola_v2/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/00245653-EC23-E411-B9BF-02163E006C73.root'
+     'root://xrootd.unl.edu//store/mc/Phys14DR/DYToMuMu_M-50_Tune4C_13TeV-pythia8/MINIAODSIM/PU40bx25_tsg_castor_PHYS14_25_V1-v2/00000/622CAFBA-BD9A-E411-BE11-002481E14FFC.root'
     )
 )
 
