@@ -1,0 +1,155 @@
+#include "MuonSelector.h"
+
+MuonSelector::MuonSelector(std::string name, TTree* tree, bool debug, const pset& iConfig):baseTree(name,tree,debug){
+  
+  SetBranches();
+}
+
+MuonSelector::~MuonSelector(){
+  delete tree_;
+}
+
+void MuonSelector::Fill(const edm::Event& iEvent){
+Clear();
+
+int mucoun = 0;
+ edm::Handle<pat::MuonCollection> muons;
+iEvent.getByToken(muonToken_, muons);
+ for (const pat::Muon &mu : *muons) {
+  if (mu.pt() < 10 || !mu.isLooseMuon()) continue;
+  if (fabs(mu.eta()) > 2.4) continue;  
+//  printf("muon with pt %4.1f, dz(PV) %+5.3f, POG loose id %d, tight id %d\n",
+// mu.pt(), mu.muonBestTrack()->dz(PV.position()), mu.isLooseMuon(), mu.isTightMuon(PV));
+
+   reco::TrackRef gtk = mu.globalTrack();
+   
+   MuonPt.push_back(mu.pt());
+   MuonEta.push_back(mu.eta());
+   MuonPhi.push_back(mu.phi());
+   MuonP.push_back(mu.p());
+
+   MuonCharge.push_back(mu.charge());
+   if(gtk.isNonnull()){
+   MuonChi2.push_back(gtk->normalizedChi2());
+   MuonValidHits.push_back(gtk->hitPattern().numberOfValidMuonHits()); 
+   } else {                
+   MuonChi2.push_back(-9999);
+   MuonValidHits.push_back(-9999);
+
+   }
+   MuonMatchedStat.push_back(mu.numberOfMatchedStations());
+   MuonDXY.push_back(mu.muonBestTrack()->dxy(PV.position())); 
+   if(mu.innerTrack().isNonnull()){
+   MuonValidHitsInner.push_back(mu.innerTrack()->hitPattern().numberOfValidPixelHits());
+   MuonTLayers.push_back(mu.innerTrack()->hitPattern().trackerLayersWithMeasurement());
+   } else {
+   MuonValidHitsInner.push_back(-999);
+   MuonTLayers.push_back(-999);
+   }
+
+   MuonDZ.push_back(mu.muonBestTrack()->dz(PV.position()));
+   MuonTight.push_back(mu.isTightMuon(PV));
+   MuonSoft.push_back(mu.isSoftMuon(PV));
+   MuonPF.push_back(mu.isPFMuon());   
+   MuonEnergy.push_back(mu.energy());
+   MuonRel.push_back((mu.trackIso() + mu.ecalIso() + mu.hcalIso()));
+   MuonIsoCharParPt.push_back((mu.pfIsolationR04().sumChargedParticlePt));
+   MuonIsoCharged.push_back((mu.pfIsolationR04().sumChargedHadronPt));
+   MuonIsoNeutralHadron.push_back((mu.pfIsolationR04().sumNeutralHadronEt));
+   MuonIsoPhoton.push_back((mu.pfIsolationR04().sumPhotonEt));
+   MuonIsoPU.push_back((mu.pfIsolationR04().sumPUPt));
+
+
+  mucoun++;
+  }
+
+ if(mucoun >=1 ) hFillMuon->Fill(1);
+
+}
+
+void MuonSelector::SetBranches(){
+  if(debug_)    std::cout<<"setting branches: calling AddBranch of baseTree"<<std::endl;
+  /*  AddBranch(&GenJetAK5Pt           ,"GenJetAK5Pt");
+  AddBranch(&GenJetAK5Eta	   ,"GenJetAK5Eta");     
+  AddBranch(&GenJetAK5Phi	   ,"GenJetAK5Phi");     
+  AddBranch(&GenJetAK5Energy	   ,"GenJetAK5Energy");  
+  AddBranch(&GenJetAK5Mass	   ,"GenJetAK5Mass");    
+  AddBranch(&GenJetAK5P		   ,"GenJetAK5P");       
+  AddBranch(&GenJetemf		   ,"GenJetemf");        
+  AddBranch(&GenJethadf		   ,"GenJethadf");       
+  AddBranch(&PFJetPt		   ,"PFJetPt");          
+  AddBranch(&PFJetEta		   ,"PFJetEta");         
+  AddBranch(&PFJetPhi		   ,"PFJetPhi");         
+  AddBranch(&PFJetEnergy	   ,"PFJetEnergy");      
+  AddBranch(&PFJetMass		   ,"PFJetMass");        
+  AddBranch(&PFJetP		   ,"PFJetP");    
+  */
+
+  AddBranch(&MuonPt                ,"MuonPt");
+  AddBranch(&MuonEta               ,"MuonEta");
+  AddBranch(&MuonPhi               ,"MuonPhi");
+  AddBranch(&MuonP                 ,"MuonP");
+  AddBranch(&MuonEnergy            ,"MuonEnergy");
+  AddBranch(&MuonCharge            ,"MuonCharge");
+  AddBranch(&MuonChi2              ,"MuonChi2");
+  AddBranch(&MuonValidHits         ,"MuonValidHits");
+  AddBranch(&MuonValidHitsInner    ,"MuonValidHitsInner");
+  AddBranch(&MuonMatchedStat       ,"MuonMatchedStat");
+  AddBranch(&MuonDXY               ,"MuonDXY");
+  AddBranch(&MuonTLayers           ,"MuonTLayers");
+  AddBranch(&MuonDZ                ,"MuonDZ");
+  AddBranch(&MuonTight             ,"MuonTight");
+  AddBranch(&MuonSoft              ,"MuonSoft");
+  AddBranch(&MuonPF                ,"MuonPF");
+  AddBranch(&MuonIsoCharged        ,"MuonIsoCharged");
+  AddBranch(&MuonRel               ,"MuonRel");
+  AddBranch(&MuonIsoCharParPt      ,"MuonIsoCharParPt");
+  AddBranch(&MuonIsoNeutralHadron  ,"MuonIsoNeutralHadron");
+  AddBranch(&MuonIsoPhoton         ,"MuonIsoPhoton");
+  AddBranch(&MuonIsoPU             ,"MuonIsoPU");
+
+  if(debug_)    std::cout<<"set branches"<<std::endl;
+}
+
+void MuonSelector::Clear(){
+
+ GenJetAK5Pt.clear();
+ GenJetAK5Eta.clear();
+ GenJetAK5Phi.clear();
+ GenJetAK5Energy.clear();
+ GenJetAK5Mass.clear();
+ GenJetAK5P.clear();
+ GenJetemf.clear();
+ GenJethadf.clear();
+
+ PFJetPt.clear();
+ PFJetEta.clear();
+ PFJetPhi.clear();
+ PFJetEnergy.clear();
+ PFJetMass.clear();
+ PFJetP.clear();
+
+  MuonPt.clear();
+  MuonEta.clear();
+  MuonPhi.clear();
+  MuonEnergy.clear();
+  MuonDZ.clear();
+  MuonTight.clear();
+  MuonSoft.clear();
+  MuonPF.clear();   
+  MuonIsoCharged.clear();
+  MuonIsoNeutralHadron.clear();
+  MuonIsoPhoton.clear();
+  MuonIsoPU.clear();
+  MuonP.clear(); 
+  MuonCharge.clear(); 
+  MuonChi2.clear(); 
+  MuonValidHits.clear();
+  MuonValidHitsInner.clear(); 
+  MuonMatchedStat.clear(); 
+  MuonDXY.clear(); 
+  MuonTLayers.clear(); 
+
+
+
+}
